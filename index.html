@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KENT // EXTERMINATOR</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Courier New', monospace;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+    #ui {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: #aaa;
+    }
+    #ui span { color: #fff; }
+    canvas {
+      border: 2px solid #333;
+      image-rendering: pixelated;
+    }
+    #debug {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #555;
+      text-align: center;
+      height: 16px;
+    }
+    #instructions {
+      margin-top: 10px;
+      font-size: 11px;
+      color: #444;
+      text-align: center;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <div>HEIGHT: <span id="hud-height">0</span></div>
+    <div>PLATFORM: <span id="hud-plat">0</span></div>
+    <div>WALL JUMP: <span id="hud-wj">READY</span></div>
+  </div>
+  <canvas id="canvas" width="360" height="540"></canvas>
+  <div id="debug" id="debug-line"></div>
+  <div id="instructions">
+    ARROW KEYS / A·D — move &nbsp;|&nbsp; SPACE / W — jump (hold for height)
+    &nbsp;|&nbsp; SPACE on wall — wall jump &nbsp;|&nbsp; DOWN in air — fast fall
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
