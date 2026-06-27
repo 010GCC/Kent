@@ -2,57 +2,303 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KENT // EXTERMINATOR</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     body {
       background: #0a0a0f;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
+      justify-content: flex-start;
+      min-height: 100vh;
       font-family: 'Courier New', monospace;
-      color: #e0e0e0;
       overflow: hidden;
     }
-    #ui {
-      display: flex;
-      gap: 40px;
-      margin-bottom: 8px;
-      font-size: 13px;
-      letter-spacing: 2px;
-      color: #aaa;
-    }
-    #ui span { color: #fff; }
     canvas {
       border: 2px solid #333;
+      border-bottom: none;
       image-rendering: pixelated;
+      display: block;
     }
+
+    /* ── Controls bar ────────────────────────────────────────── */
+    #controls {
+      width: 360px;
+      height: 144px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px;
+      background: #0d0d18;
+      border: 2px solid #333;
+      border-top: 1px solid #222;
+    }
+
+    /* D-PAD */
+    #dpad {
+      position: relative;
+      width: 132px;
+      height: 132px;
+      flex-shrink: 0;
+    }
+    .dpad-btn {
+      position: absolute;
+      background: repeating-linear-gradient(
+        45deg, #1a2e1a, #1a2e1a 4px, #253e25 4px, #253e25 8px
+      );
+      border: 2px solid #0a140a;
+      box-shadow: inset 0 1px 0 rgba(80,200,80,0.12), 0 4px 8px rgba(0,0,0,0.7);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(80,200,80,0.45);
+      font-size: 13px;
+    }
+    .dpad-btn.pressed { filter: brightness(1.7); }
+    /* arm = 44px wide, 44px tall, center = 44px */
+    #dUp    { top: 0;    left: 44px; width: 44px; height: 44px; border-radius: 5px 5px 0 0; }
+    #dDown  { bottom: 0; left: 44px; width: 44px; height: 44px; border-radius: 0 0 5px 5px; }
+    #dLeft  { top: 44px; left: 0;    width: 44px; height: 44px; border-radius: 5px 0 0 5px; }
+    #dRight { top: 44px; right: 0;   width: 44px; height: 44px; border-radius: 0 5px 5px 0; }
+    #dCenter {
+      position: absolute;
+      top: 44px; left: 44px;
+      width: 44px; height: 44px;
+      background: repeating-linear-gradient(45deg, #1a2e1a, #1a2e1a 4px, #253e25 4px, #253e25 8px);
+      border: 2px solid #0a140a;
+      pointer-events: none;
+    }
+    #dpadOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 132px; height: 132px;
+      z-index: 10;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    /* ACTION BUTTONS */
+    #actionBtns {
+      position: relative;
+      width: 144px;
+      height: 132px;
+      flex-shrink: 0;
+    }
+    .action-btn {
+      position: absolute;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 3px solid #1a1a6e;
+      background: radial-gradient(circle at 35% 30%, #5a5af0, #1e1e9a 70%);
+      box-shadow: 0 5px 0 #0d0d50, 0 8px 16px rgba(0,0,0,0.7), inset 0 1px 0 rgba(120,120,255,0.3);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      font-weight: bold;
+      color: rgba(255,255,255,0.9);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.04s, box-shadow 0.04s;
+    }
+    .action-btn.pressed {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 #0d0d50, 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 0 rgba(120,120,255,0.3);
+      filter: brightness(1.5);
+    }
+    /* B: upper-left, A: lower-right — diagonal like a gamepad face */
+    #btnB { top: 4px;  left: 4px;  }
+    #btnA { top: 70px; left: 82px; }
+    #actionOverlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+
     #debug {
-      margin-top: 8px;
-      font-size: 11px;
-      color: #555;
+      font-size: 10px;
+      color: #2a2a3a;
       text-align: center;
-      height: 16px;
-    }
-    #instructions {
-      margin-top: 10px;
-      font-size: 11px;
-      color: #444;
-      text-align: center;
-      line-height: 1.6;
+      width: 360px;
+      height: 14px;
+      margin-top: 2px;
     }
   </style>
 </head>
 <body>
   <canvas id="canvas" width="360" height="540"></canvas>
-  <div id="debug"></div>
-  <div id="instructions">
-    ARROWS / A·D — move &nbsp;|&nbsp; SPACE / W — jump (hold) &nbsp;|&nbsp; SPACE on wall — wall jump
-    &nbsp;|&nbsp; S / DOWN — fast fall &nbsp;|&nbsp; F — spray (hold)
+
+  <div id="controls">
+    <!-- D-pad: left/right move, up=jump, down=fast-fall -->
+    <div id="dpad">
+      <div class="dpad-btn" id="dUp">▲</div>
+      <div class="dpad-btn" id="dDown">▼</div>
+      <div class="dpad-btn" id="dLeft">◀</div>
+      <div class="dpad-btn" id="dRight">▶</div>
+      <div id="dCenter"></div>
+      <div id="dpadOverlay"></div>
+    </div>
+
+    <!-- Action buttons: A=jump, B=spray -->
+    <div id="actionBtns">
+      <div class="action-btn" id="btnB">B</div>
+      <div class="action-btn" id="btnA">A</div>
+      <div id="actionOverlay"></div>
+    </div>
   </div>
+
+  <div id="debug"></div>
+
   <script src="game.js"></script>
+  <script>
+    // Touch → key bridge
+    // game.js exposes keys/justPressed/justReleased as globals (const objects, mutable)
+    function touchPress(code) {
+      if (!keys[code]) justPressed[code] = true;
+      keys[code] = true;
+    }
+    function touchRelease(code) {
+      keys[code] = false;
+      justReleased[code] = true;
+    }
+
+    // ── D-PAD ────────────────────────────────────────────────────────────────
+    (function () {
+      const overlay = document.getElementById('dpadOverlay');
+      const SIZE = 132, ARM = 44;
+
+      const DIR_CODE = { up: 'Space', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' };
+      const DIR_EL   = { up: 'dUp',   down: 'dDown',     left: 'dLeft',     right: 'dRight' };
+      let activeDir = null;
+
+      function getDirFromXY(x, y) {
+        const cx = SIZE / 2, cy = SIZE / 2;
+        const dx = x - cx, dy = y - cy;
+        const adx = Math.abs(dx), ady = Math.abs(dy);
+        if (adx < ARM / 2 && ady < ARM / 2) return null;
+        if (adx > ady) return dx > 0 ? 'right' : 'left';
+        return dy > 0 ? 'down' : 'up';
+      }
+
+      function clearDpad() {
+        if (activeDir) {
+          touchRelease(DIR_CODE[activeDir]);
+          document.getElementById(DIR_EL[activeDir]).classList.remove('pressed');
+          activeDir = null;
+        }
+      }
+
+      function applyDir(dir) {
+        if (dir === activeDir) return;
+        clearDpad();
+        if (!dir) return;
+        activeDir = dir;
+        touchPress(DIR_CODE[dir]);
+        document.getElementById(DIR_EL[dir]).classList.add('pressed');
+      }
+
+      function applyTouches(touches) {
+        if (touches.length === 0) { clearDpad(); return; }
+        const rect = overlay.getBoundingClientRect();
+        const t = touches[touches.length - 1];
+        applyDir(getDirFromXY(t.clientX - rect.left, t.clientY - rect.top));
+      }
+
+      const opts = { passive: false };
+      overlay.addEventListener('touchstart',  e => { e.preventDefault(); applyTouches(e.targetTouches); }, opts);
+      overlay.addEventListener('touchmove',   e => { e.preventDefault(); applyTouches(e.targetTouches); }, opts);
+      overlay.addEventListener('touchend',    e => { e.preventDefault(); applyTouches(e.targetTouches); }, opts);
+      overlay.addEventListener('touchcancel', e => { e.preventDefault(); clearDpad(); }, opts);
+    })();
+
+    // ── ACTION BUTTONS ───────────────────────────────────────────────────────
+    (function () {
+      const overlay = document.getElementById('actionOverlay');
+      const BTN_SIZE = 58;
+      const BTNS = [
+        { id: 'btnB', code: 'KeyF',  cx: 4  + BTN_SIZE / 2, cy: 4  + BTN_SIZE / 2 },
+        { id: 'btnA', code: 'Space', cx: 82 + BTN_SIZE / 2, cy: 70 + BTN_SIZE / 2 },
+      ];
+      const RADIUS = BTN_SIZE / 2 + 8;
+      const touchBtns = new Map();
+
+      function getBtnAt(x, y) {
+        let best = null, bestD = Infinity;
+        for (const b of BTNS) {
+          const d = Math.hypot(x - b.cx, y - b.cy);
+          if (d < RADIUS && d < bestD) { bestD = d; best = b; }
+        }
+        return best;
+      }
+
+      function getRelXY(touch) {
+        const rect = overlay.getBoundingClientRect();
+        return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+      }
+
+      function pressBtn(btn) {
+        if (!btn) return;
+        touchPress(btn.code);
+        document.getElementById(btn.id).classList.add('pressed');
+      }
+
+      function releaseBtn(btn) {
+        if (!btn) return;
+        touchRelease(btn.code);
+        document.getElementById(btn.id).classList.remove('pressed');
+      }
+
+      const opts = { passive: false };
+
+      overlay.addEventListener('touchstart', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+          const { x, y } = getRelXY(t);
+          const btn = getBtnAt(x, y);
+          touchBtns.set(t.identifier, btn);
+          pressBtn(btn);
+        }
+      }, opts);
+
+      overlay.addEventListener('touchmove', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+          const { x, y } = getRelXY(t);
+          const newBtn = getBtnAt(x, y);
+          const oldBtn = touchBtns.get(t.identifier);
+          if (newBtn !== oldBtn) {
+            releaseBtn(oldBtn);
+            touchBtns.set(t.identifier, newBtn);
+            pressBtn(newBtn);
+          }
+        }
+      }, opts);
+
+      overlay.addEventListener('touchend', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+          releaseBtn(touchBtns.get(t.identifier));
+          touchBtns.delete(t.identifier);
+        }
+      }, opts);
+
+      overlay.addEventListener('touchcancel', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+          releaseBtn(touchBtns.get(t.identifier));
+          touchBtns.delete(t.identifier);
+        }
+      }, opts);
+    })();
+  </script>
 </body>
 </html>
